@@ -4,9 +4,10 @@ Model::Model()
 {
 }
 
-void Model::loadFromFile(const char* filePath, const char* mtlPath) {
+void Model::loadFromFile(const char* objPath, const char* mtlPath, bool loadTexture) {
 
-    std::vector<Vertex> mesh = loadOBJ(filePath);
+    mesh = loadOBJ(objPath, mtlPath);
+    std::string path;
 
     // Load in all indices
     for (size_t i = 0; i < mesh.size(); ++i)
@@ -14,9 +15,36 @@ void Model::loadFromFile(const char* filePath, const char* mtlPath) {
         vertices.push_back(mesh[i].position);
         uvs.push_back(mesh[i].texcoord);
         normals.push_back(mesh[i].normal);
-        colours.push_back(mesh[i].colour);
+
+        ambients.push_back(mesh[i].material.ambientColour);
+        diffuses.push_back(mesh[i].material.diffuseColour);
+        speculars.push_back(mesh[i].material.specularColour);
+
+        if (loadTexture) {
+            path = "media/" + mesh[i].material.textureFileName;
+            texturePaths.push_back(path.c_str());
+        }
     }
 
+    if (loadTexture) {
+        loadTextureFromFile(path.c_str());
+    }
+
+
+//    loadTexture(texturebuffer, path.c_str());
+  //  glUniform1i(glGetUniformLocation(getProgramID(), "myTextureSampler"), 0);
+
+    // Pass the texture to the shader.
+    //glActiveTexture(GL_TEXTURE0);
+    //glBindTexture(GL_TEXTURE_2D, texturebuffer);
+    //glUniform1i(texturebuffer, 0);
+
+    // Pass the texture to the shader.
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texturebuffer);
+    glUniform1i(texturebuffer, 0);
+
+    // OBj info 
     glGenBuffers(1, &vertexbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
     glBufferData(GL_ARRAY_BUFFER, (vertices.size()) * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
@@ -29,13 +57,23 @@ void Model::loadFromFile(const char* filePath, const char* mtlPath) {
     glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
     glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals[0], GL_STATIC_DRAW);
 
-    glGenBuffers(1, &colourbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, colourbuffer);
-    glBufferData(GL_ARRAY_BUFFER, colours.size() * sizeof(glm::vec3), &colours[0], GL_STATIC_DRAW);
+    // MTL info
+    glGenBuffers(1, &ambientbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, ambientbuffer);
+    glBufferData(GL_ARRAY_BUFFER, ambients.size() * sizeof(glm::vec3), &ambients[0], GL_STATIC_DRAW);
+
+    glGenBuffers(1, &diffusebuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, diffusebuffer);
+    glBufferData(GL_ARRAY_BUFFER, diffuses.size() * sizeof(glm::vec3), &diffuses[0], GL_STATIC_DRAW);
+
+    glGenBuffers(1, &specularbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, specularbuffer);
+    glBufferData(GL_ARRAY_BUFFER, speculars.size() * sizeof(glm::vec3), &speculars[0], GL_STATIC_DRAW);
 }
 
 void Model::draw() {
-    // Enable the vertex, uv, normal buffers, and colour buffers.
+
+    // Enable the vertex, uv, normal buffers, and lighting buffers.
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
@@ -49,8 +87,16 @@ void Model::draw() {
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
     glEnableVertexAttribArray(3);
-    glBindBuffer(GL_ARRAY_BUFFER, colourbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, ambientbuffer);
     glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    glEnableVertexAttribArray(4);
+    glBindBuffer(GL_ARRAY_BUFFER, diffusebuffer);
+    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    glEnableVertexAttribArray(5);
+    glBindBuffer(GL_ARRAY_BUFFER, specularbuffer);
+    glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
     // Tell OpenGL to draw the triangles.
     glDrawArrays(GL_TRIANGLES, 0, vertices.size());
@@ -60,6 +106,63 @@ void Model::draw() {
     glDisableVertexAttribArray(1);
     glDisableVertexAttribArray(2);
     glDisableVertexAttribArray(3);
+    glDisableVertexAttribArray(4);
+    glDisableVertexAttribArray(5);
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
+
+void Model::loadTexture(GLuint& texture, std::string texturepath)
+{
+    // load and create a texture 
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    // set the texture wrapping parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // set texture filtering parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // load image, create texture and generate mipmaps
+    GLint width, height, nrChannels;
+    stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
+    unsigned char* data = stbi_load(texturepath.c_str(), &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
+}
+
+void Model::loadTextureFromFile(const char* filePath) {
+    if (strcmp(filePath, "") != 0) {
+        printf("Loading Image %s...", filePath);
+        GLint programID = getProgramID();
+        glGenTextures(1, &texturebuffer);
+        int width, height, comp;
+        unsigned char* image = stbi_load(filePath, &width, &height, &comp, STBI_rgb_alpha);
+        if (image == nullptr) {
+            printf("Failed. Image wasn't able to load.\n");
+        }
+        else {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, texturebuffer);
+
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+            stbi_image_free(image);
+            glUniform1i(glGetUniformLocation(programID, "myTextureSampler"), 0);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            printf("Done\n");
+        }
+    }
 }

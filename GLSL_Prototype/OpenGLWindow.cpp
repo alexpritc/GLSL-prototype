@@ -6,14 +6,15 @@ float yaw = -90.0f;
 float pitch = 0.0f;
 float lastX = 800.0f / 2.0;
 float lastY = 600.0 / 2.0;
-float fov = 45.0f;
+float fov = 100.0f;
 
 // Lighting
-glm::vec3 lightPos(100.0f, 100.0f, 100.0f);
+glm::vec3 lightPos(0.0f, 100.0f, 0.0f);
 
-const glm::vec3 sceneScale(1.0f, 1.0f, 1.0f);
+const glm::vec3 sceneScale(1.0f, 1.25f, 1.0f);
 
-Model mouseModel;
+Model plantModel;
+Model floorModel;
 
 // Callbacks
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -49,9 +50,10 @@ bool OpenGLWindow::createOpenGLWindow(const std::string& windowTitle, bool showF
 	glfwMakeContextCurrent(_window);
 	glewInit();
 
-	_sceneCamera = Camera(glm::vec3(0.0f, 1.0f, 5.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	_sceneCamera = Camera(glm::vec3(0.0f, 5.0f, 20.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	_shaderProgram = Shader("shaders/basic.vert", "shaders/basic.frag");
-	mouseModel.loadFromFile("media/Smudge.obj", "");
+	plantModel.loadFromFile("media/HousePlantScene.obj", "media/HousePlantScene.mtl");
+	floorModel.loadFromFile("media/Floor.obj", "media/Floor.mtl", true);
 
 	if (!showFullscreen)
 	{
@@ -111,14 +113,15 @@ void OpenGLWindow::renderScene() {
 	glm::mat4 model = glm::mat4(1.0f);
 	model = glm::scale(model, sceneScale);
 
-	mouseModel.draw();
+	plantModel.draw();
+	floorModel.draw();
 
 	// Process shader
 	_shaderProgram.updateModelViewProjection(model, _sceneCamera.getViewMatrix(), _sceneCamera.getProjectionMatrix());
 	_shaderProgram.use();
 
-	_shaderProgram.setVec3("lightColor", 1.0f, 0.9f, 0.75f);
-	_shaderProgram.setFloat("lightIntensity", 0.1f);
+	_shaderProgram.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+	_shaderProgram.setFloat("lightIntensity", 0.25f);
 	_shaderProgram.setVec3("lightPos", lightPos);
 	_shaderProgram.setVec3("viewPos", _sceneCamera.getPosition());
 
@@ -149,7 +152,7 @@ void processInput(GLFWwindow* window)
 
 	// Zoom in
 	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_RELEASE) {
-		fov = 45.0f;
+		fov = 60.0f;
 	}
 	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
 		fov = 10.0f;

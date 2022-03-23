@@ -1,3 +1,4 @@
+#pragma once
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
@@ -12,8 +13,7 @@ extern GLFWwindow* window;
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
 
-//#define STB_IMAGE_IMPLEMENTATION
-//#include "stb_image.h"
+#include "stb_image.h"
 #include "ObjectLoader.h"
 
 class Model
@@ -22,30 +22,37 @@ class Model
 
     Model();
 
-    void loadFromFile(const char* filePath, const char* mtlPath);
+    void loadFromFile(const char* filePath, const char* mtlPath, bool loadTexture = false);
 
     void draw();
 
-    void deleteBuffers() {
-        glDeleteBuffers(1, &vertexbuffer);
-        glDeleteBuffers(1, &uvbuffer);
-        glDeleteBuffers(1, &normalbuffer);
-        glDeleteBuffers(1, &colourbuffer);
-        glDeleteTextures(1, &texture);
-    }
+    void loadTexture(GLuint &texture, std::string texturePath);
+
+    void loadTextureFromFile(const char* filePath);
 
     private:
+    std::vector<Vertex> mesh;
+    std::vector<Material> materials;
 
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec2> uvs;
     std::vector<glm::vec3> normals;
-    std::vector<glm::vec3> colours;
+
+    std::vector<glm::vec3> ambients;
+    std::vector<glm::vec3> diffuses;
+    std::vector<glm::vec3> speculars;
+
+    std::vector<const char*> texturePaths;
 
     GLuint vertexbuffer;
     GLuint uvbuffer;
     GLuint normalbuffer;
-    GLuint colourbuffer;
-    GLuint texture;
+
+    GLuint ambientbuffer;
+    GLuint diffusebuffer;
+    GLuint specularbuffer;
+
+    GLuint texturebuffer;
 
 
     GLuint getProgramID() {
