@@ -30,15 +30,6 @@ void Model::loadFromFile(const char* objPath, const char* mtlPath, bool loadText
         loadTextureFromFile(path.c_str());
     }
 
-
-//    loadTexture(texturebuffer, path.c_str());
-  //  glUniform1i(glGetUniformLocation(getProgramID(), "myTextureSampler"), 0);
-
-    // Pass the texture to the shader.
-    //glActiveTexture(GL_TEXTURE0);
-    //glBindTexture(GL_TEXTURE_2D, texturebuffer);
-    //glUniform1i(texturebuffer, 0);
-
     // Pass the texture to the shader.
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texturebuffer);
