@@ -1,1 +1,1 @@
-# GLSL-prototyping
+# GLSL-prototype
