@@ -10,8 +10,14 @@ float fov = 100.0f;
 
 // Lighting
 glm::vec3 lightPos(0.0f, 100.0f, 0.0f);
+glm::vec3 lightColor(0.9f, 0.9f, 0.9f);
+float lightIntensity = 0.25f;
 
 const glm::vec3 sceneScale(1.0f, 1.25f, 1.0f);
+
+// Camera
+glm::vec3 cameraPos(0.0f, 1.0f, 10.0f);
+const glm::vec3 cameraUp(0.0f, 1.0f, 0.0f);
 
 Model plantModel;
 Model floorModel;
@@ -50,7 +56,7 @@ bool OpenGLWindow::createOpenGLWindow(const std::string& windowTitle, bool showF
 	glfwMakeContextCurrent(_window);
 	glewInit();
 
-	_sceneCamera = Camera(glm::vec3(0.0f, 5.0f, 20.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	_sceneCamera = Camera(cameraPos, cameraUp);
 	_shaderProgram = Shader("shaders/basic.vert", "shaders/basic.frag");
 	plantModel.loadFromFile("media/HousePlantScene.obj", "media/HousePlantScene.mtl");
 	floorModel.loadFromFile("media/Floor.obj", "media/Floor.mtl", true);
@@ -120,8 +126,8 @@ void OpenGLWindow::renderScene() {
 	_shaderProgram.updateModelViewProjection(model, _sceneCamera.getViewMatrix(), _sceneCamera.getProjectionMatrix());
 	_shaderProgram.use();
 
-	_shaderProgram.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-	_shaderProgram.setFloat("lightIntensity", 0.25f);
+	_shaderProgram.setVec3("lightColor", lightColor);
+	_shaderProgram.setFloat("lightIntensity", lightIntensity);
 	_shaderProgram.setVec3("lightPos", lightPos);
 	_shaderProgram.setVec3("viewPos", _sceneCamera.getPosition());
 
