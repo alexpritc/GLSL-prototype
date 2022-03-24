@@ -34,7 +34,7 @@ _Follow the instructions below to setup the app. This project doesn't rely on an
    ```sh
    git clone https://github.com/alexpritc/GLSL-prototype
    ```
-2. Extract the latest build at [GLSL-prototype.zip]()
+2. Extract the latest build at [GLSL-prototype.zip](https://github.com/alexpritc/GLSL-prototype/blob/main/GLSL_Prototype.zip)
 
 3. Run `GLSL_Prototype.exe`
    ```sh
