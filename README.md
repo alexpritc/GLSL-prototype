@@ -68,7 +68,7 @@ Here is the list of the keys that can be used to interact with the program
 ## Video
 _Click to play developer walkthrough:_
 
-[]()
+[https://www.youtube.com/watch?v=mGD4mQEvDUc](https://www.youtube.com/watch?v=mGD4mQEvDUc)
 
 <!-- LIBRARIES -->
 ## List of libraries used
